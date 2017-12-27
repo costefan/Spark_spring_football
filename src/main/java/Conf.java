@@ -6,16 +6,18 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
-
 @Configuration
 @ComponentScan
 @PropertySource("classpath:user.properties")
 public class Conf {
+
     @Autowired
     private SparkConf sparkConf;
 
     @Bean
-    public JavaSparkContext sc(){
+    public JavaSparkContext sc() {
         return new JavaSparkContext(sparkConf);
     }
+
+
 }
