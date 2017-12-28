@@ -1,8 +1,7 @@
-import org.apache.spark.SparkConf;
-import org.apache.spark.SparkContext;
+package football;
+
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.rdd.RDD;
 import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
@@ -11,6 +10,9 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.storage.StorageLevel;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,8 +20,25 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public class Main {
+@Service
+public class DataFrameBuilder {
+
+    @Autowired
+    private JavaSparkContext sc;
+
+
+    @Autowired
+    private SQLContext sqlContext;
+
+    private static List<String> columns;
+
+    @Value("${columnNames}")
+    public void setColumns(String[] columns) {
+        DataFrameBuilder.columns = Stream.of(columns).map(String::toLowerCase).collect(Collectors.toList()) ;
+    }
+
     private static StructType createSchema() {
 
         return DataTypes.createStructType(new StructField[] {
@@ -32,35 +51,34 @@ public class Main {
         });
     }
 
-    private static String parseValue(String value) {
+    public static String parseValue(String value) {
         Pattern pattern = Pattern.compile("^([a-zA-Z]+)=(.+)");
         Matcher m  = pattern.matcher(value);
-        if (m.matches()) {
+        // if column name is valid and string is valid
+        if (m.matches() && columns.contains(m.group(1))) {
             return m.group(2);
         } else {
-            return value;
+            return "";
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        SparkConf sparkConf = new SparkConf()
-                .setAppName("Football app")
-                .setMaster("local[*]")
-                .set("spark.driver.host", "localhost");
+    public DataFrame create() {
 
-        JavaSparkContext sc = new JavaSparkContext(sparkConf);
-        SQLContext sqlContext = new SQLContext(sc);
+        System.out.println("----------------------------");
+        System.out.println("Available cols:");
+        System.out.println(columns);
+        System.out.println("----------------------------");
+
         JavaRDD<String> rdd = sc.textFile("data/rawData.txt");
 
         rdd.persist(StorageLevel.MEMORY_AND_DISK());
-
         JavaRDD<Row> rowRdd = rdd.map(String::toLowerCase).filter(line -> line.length() != 0).map(line -> {
             ArrayList<String> data = new ArrayList<String>(Arrays.asList(line.split(";")));
             List<String> parsedData = data
                     .stream()
-                    .map(Main::parseValue)
+                    .map(DataFrameBuilder::parseValue)
                     .collect(Collectors.toCollection(ArrayList::new));
-            System.out.println(parsedData);
+
             return RowFactory.create(
                     Integer.parseInt(parsedData.get(0)), parsedData.get(1), parsedData.get(2), parsedData.get(3),
                     parsedData.get(4), parsedData.get(5));
@@ -69,6 +87,8 @@ public class Main {
         StructType schema = createSchema();
 
         DataFrame df = sqlContext.createDataFrame(rowRdd, schema);
-        df.show();
+        df = df.drop("starttime");
+
+        return df;
     }
 }
