@@ -25,6 +25,8 @@ public class FootballProcessingImpl implements FootballProcessing {
     @Autowired
     private DataFrameBuilder dataFrameBuilder;
 
+    @Autowired
+    private MutatorService mutatorService;
 
     @Override
     public DataFrame run() {

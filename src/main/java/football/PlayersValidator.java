@@ -1,24 +1,24 @@
 package football;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.apache.spark.broadcast.Broadcast;
+import org.apache.spark.sql.DataFrame;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import static org.apache.spark.sql.functions.col;
 
 @Service
 public class PlayersValidator implements Validator{
 
-    @Value("${Russia}")
-    private List<String> russianPlayers;
-
-    @Value("${Ukraine}")
-    private List<String> ukrainianPlayers;
-
-    @Value("${Germany}")
-    private List<String> germanyPlayers;
+    @AutowiredBroadcast
+    private Broadcast<PlayersConfig> broadcast;
 
     @Override
-    public List<Integer> getInvalidRows() {
-        return null;
+    public DataFrame filter(DataFrame dataFrame) {
+        return dataFrame
+                .filter(col("from").isin(
+                    broadcast.getValue().allPlayers.stream().toArray(String[]::new)))
+                .filter(col("to").isin(
+                    broadcast.getValue().allPlayers.stream().toArray(String[]::new)));
     }
 }

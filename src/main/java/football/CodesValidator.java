@@ -1,5 +1,6 @@
 package football;
 
+import org.apache.spark.sql.DataFrame;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -8,7 +9,7 @@ import java.util.List;
 public class CodesValidator implements Validator {
 
     @Override
-    public List<Integer> getInvalidRows() {
+    public DataFrame filter(DataFrame dataFrame) {
         return null;
     }
 }

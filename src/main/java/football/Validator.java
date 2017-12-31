@@ -1,7 +1,9 @@
 package football;
 
+import org.apache.spark.sql.DataFrame;
+
 import java.util.List;
 
 public interface Validator {
-    public List<Integer> getInvalidRows();
+    public DataFrame filter(DataFrame df);
 }
