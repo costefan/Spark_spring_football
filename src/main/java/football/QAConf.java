@@ -1,21 +1,24 @@
 package football;
 
+
 import org.apache.spark.SparkConf;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
-import static football.Constants.*;
+import static football.Constants.QA;
 
 
-@Profile(PROD)
+@Profile(QA)
 @Configuration
-public class ProdConf {
+public class QAConf {
 
     @Bean
     public SparkConf sparkConf(){
         SparkConf sparkConf = new SparkConf();
         sparkConf.setAppName("football-app");
+        sparkConf.setMaster("local[*]");
+
         return sparkConf;
     }
 }

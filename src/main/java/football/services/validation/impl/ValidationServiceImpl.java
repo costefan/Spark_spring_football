@@ -1,15 +1,15 @@
-package football;
+package football.services.validation.impl;
 
+import football.services.validation.ValidationService;
+import football.validators.Validator;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.DataFrame;
+import org.apache.spark.storage.StorageLevel;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Modifier;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Service
 public class ValidationServiceImpl implements ValidationService {
@@ -24,13 +24,17 @@ public class ValidationServiceImpl implements ValidationService {
     }
 
     @Override
-    public void validate(DataFrame dataFrame) {
-        System.out.println(validators);
+    public DataFrame validate(DataFrame dataFrame) {
 
         for (Validator validator: validators) {
             if (!Modifier.isAbstract(validator.getClass().getModifiers())) {
-                System.out.println(validator.filter(dataFrame));
+
+                dataFrame = validator.filter(dataFrame);
+
             }
         }
+        dataFrame.persist(StorageLevel.MEMORY_AND_DISK());
+
+        return dataFrame;
     }
 }

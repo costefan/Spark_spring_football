@@ -1,4 +1,4 @@
-package football;
+package football.services;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -47,7 +47,6 @@ public class DataFrameBuilder {
                 DataTypes.createStructField("to", DataTypes.StringType, true),
                 DataTypes.createStructField("eventTime", DataTypes.StringType, false),
                 DataTypes.createStructField("stadion", DataTypes.StringType, false),
-                DataTypes.createStructField("startTime", DataTypes.StringType, false),
         });
     }
 
@@ -62,14 +61,9 @@ public class DataFrameBuilder {
         }
     }
 
-    public DataFrame create() {
+    public DataFrame create(String filePath) {
 
-        System.out.println("----------------------------");
-        System.out.println("Available cols:");
-        System.out.println(columns);
-        System.out.println("----------------------------");
-
-        JavaRDD<String> rdd = sc.textFile("data/rawData.txt");
+        JavaRDD<String> rdd = sc.textFile(filePath);
 
         rdd.persist(StorageLevel.MEMORY_AND_DISK());
         JavaRDD<Row> rowRdd = rdd.map(String::toLowerCase).filter(line -> line.length() != 0).map(line -> {
@@ -81,14 +75,12 @@ public class DataFrameBuilder {
 
             return RowFactory.create(
                     Integer.parseInt(parsedData.get(0)), parsedData.get(1), parsedData.get(2), parsedData.get(3),
-                    parsedData.get(4), parsedData.get(5));
+                    parsedData.get(4));
         });
 
         StructType schema = createSchema();
 
         DataFrame df = sqlContext.createDataFrame(rowRdd, schema);
-        df = df.drop("starttime");
-
         return df;
     }
 }

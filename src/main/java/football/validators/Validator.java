@@ -1,4 +1,4 @@
-package football;
+package football.validators;
 
 import org.apache.spark.sql.DataFrame;
 

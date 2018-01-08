@@ -3,8 +3,6 @@ package football;
 import org.apache.spark.sql.*;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-import java.util.Arrays;
-
 
 public class Main {
 
